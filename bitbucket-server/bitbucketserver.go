@@ -227,7 +227,7 @@ func (hook *Webhook) Parse(r *http.Request, events ...Event) (interface{}, error
 // eventKey: key value representing source of the event. This is retrieved Header property of APIGatewayV2HTTPRequest
 // payload: request body from APIGatewayV2HTTPRequest struct
 // events: list of events lambda handler is interested in. This is from the list of supported events by Bitbucket Server
-func (hook *Webhook) ParseLambdaRequest(eventKey string, payload string, r *http.Request, events ...Event) (interface{}, error) {
+func (hook *Webhook) ParseLambdaRequest(eventKey string, payload string, events ...Event) (interface{}, error) {
 
 	if len(events) == 0 {
 		return nil, ErrEventNotSpecifiedToParse
