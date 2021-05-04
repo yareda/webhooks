@@ -221,3 +221,121 @@ func (hook *Webhook) Parse(r *http.Request, events ...Event) (interface{}, error
 		return nil, fmt.Errorf("unknown event %s", bitbucketEvent)
 	}
 }
+
+// ParseLambdaRequest for use in AWS Lambda. AWS SDK doesn't provide http.Request context therefore its important
+// to pass the required parameters from lambda handler into this function.
+// Parameters:
+// eventKey: key value representing source of the event. This is retrieved Header property of APIGatewayV2HTTPRequest
+// payload: request body from APIGatewayV2HTTPRequest struct
+// events: list of events lambda handler is interested in. This is from the list of supported events by Bitbucket Server
+func (hook *Webhook) ParseLambdaRequest(eventKey string, payload string, events ...Event) (interface{}, error) {
+
+	if len(events) == 0 {
+		return nil, ErrEventNotSpecifiedToParse
+	}
+
+	if eventKey == "" {
+		return nil, ErrMissingEventKeyHeader
+	}
+
+	bitbucketEvent := Event(eventKey)
+
+	var found bool
+	for _, evt := range events {
+		if evt == bitbucketEvent {
+			found = true
+			break
+		}
+	}
+	// event not defined to be parsed
+	if !found {
+		return nil, ErrEventNotFound
+	}
+
+	if bitbucketEvent == DiagnosticsPingEvent {
+		return DiagnosticsPingPayload{}, nil
+	}
+
+	var err error
+
+	switch bitbucketEvent {
+	case RepositoryReferenceChangedEvent:
+		var pl RepositoryReferenceChangedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case RepositoryModifiedEvent:
+		var pl RepositoryModifiedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case RepositoryForkedEvent:
+		var pl RepositoryForkedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case RepositoryCommentAddedEvent:
+		var pl RepositoryCommentAddedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case RepositoryCommentEditedEvent:
+		var pl RepositoryCommentEditedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case RepositoryCommentDeletedEvent:
+		var pl RepositoryCommentDeletedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestOpenedEvent:
+		var pl PullRequestOpenedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestFromReferenceUpdatedEvent:
+		var pl PullRequestFromReferenceUpdatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestModifiedEvent:
+		var pl PullRequestModifiedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestMergedEvent:
+		var pl PullRequestMergedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestDeclinedEvent:
+		var pl PullRequestDeclinedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestDeletedEvent:
+		var pl PullRequestDeletedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestReviewerUpdatedEvent:
+		var pl PullRequestReviewerUpdatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestReviewerApprovedEvent:
+		var pl PullRequestReviewerApprovedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestReviewerUnapprovedEvent:
+		var pl PullRequestReviewerUnapprovedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestReviewerNeedsWorkEvent:
+		var pl PullRequestReviewerNeedsWorkPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestCommentAddedEvent:
+		var pl PullRequestCommentAddedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestCommentEditedEvent:
+		var pl PullRequestCommentEditedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullRequestCommentDeletedEvent:
+		var pl PullRequestCommentDeletedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	default:
+		return nil, fmt.Errorf("unknown event %s", bitbucketEvent)
+	}
+}
